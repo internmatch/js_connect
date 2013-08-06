@@ -3,7 +3,7 @@ module JsConnect
     def show
       @callback = params[:callback]
       @session = JsConnect.get_request_errors(params.except(:action, :controller))
-      user = JsConnect.config.current_user.respond_to?(:call) ? JsConnect.config.current_user.call(self) : send(JsConnect.config.current_user)
+      user = JsConnect.config.evaluate_current_user(self)
       @session ||= JsConnect.get_response(user, params.except(:action, :controller))
       render 'show.js.erb'
     end

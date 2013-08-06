@@ -76,7 +76,6 @@ describe JsConnect::SessionsController do
         get :show, valid_params
         response.should be_success
         session = assigns(:session)
-        puts session.inspect
         session['name'].should == user.name
         session['photourl'].should == user.photo_url
         session['uniqueid'].should == user.id

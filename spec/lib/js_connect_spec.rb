@@ -41,6 +41,46 @@ describe JsConnect do
     end
   end
 
+  describe '.valid_request_signature?' do
+    let(:data) { {'timestamp' => 12345678, 'signature' => '1234jkljklkjlklk'} }
+    it_behaves_like "it requires authentication information" do
+      let(:method_and_args) { [:valid_request_signature?, data] }
+    end
+
+    it 'returns true with the signature matches the hash' do
+      Digest::MD5.stub(:hexdigest).with("#{data['timestamp']}#{secret}"){data['signature']}
+      JsConnect.valid_request_signature?(data).should be_true
+    end
+
+    it 'returns true if the timestamp and signature are left off' do
+      JsConnect.valid_request_signature?({}).should be_true
+    end
+
+    it 'returns false with the signature not matching the hash' do
+      Digest::MD5.stub(:hexdigest).with("#{data['timestamp']}#{secret}"){'sadfsdsadfasdfas'}
+      JsConnect.valid_request_signature?(data).should be_false
+    end
+  end
+
+  describe '.valid_timestamp?' do
+    let(:data) { {'timestamp' => Time.now.utc.to_i, 'signature' => '1234jkljklkjlklk'} }
+    it_behaves_like "it requires authentication information" do
+      let(:method_and_args) { [:valid_timestamp?, data] }
+    end
+
+    it 'returns true with the timestamp being recent' do
+      JsConnect.valid_timestamp?(data).should be_true
+    end
+
+    it 'returns true if the timestamp and signature are left off' do
+      JsConnect.valid_timestamp?({}).should be_true
+    end
+
+    it 'returns false with the timestamp being old' do
+      JsConnect.valid_timestamp?(data.merge('timestamp' => 3.hours.ago.utc.to_i)).should be_false
+    end
+  end
+
   describe ".hash_to_sorted_params" do
     it "outputs the hash as CGI params" do
       JsConnect.hash_to_sorted_params({'test' => 'hi', 'so' => 'this is cool'}).should == 'so=this+is+cool&test=hi'
@@ -85,6 +125,24 @@ describe JsConnect do
     end
   end
 
+  describe ".insecure_request?" do
+    let(:timestamp) { Time.now.utc.to_i }
+    let(:signature) { Digest::MD5.hexdigest(timestamp.to_s + secret) }
+    let(:valid_data) { {'timestamp' => timestamp, 'signature' => signature} }
+
+    it "returns true for a insecure data" do
+      JsConnect.insecure_request?(valid_data.except('timestamp', 'signature')).should be_true
+    end
+
+    it "returns false for an secure data" do
+      JsConnect.insecure_request?(valid_data).should be_false
+    end
+
+    it "returns false for not-really either" do
+      JsConnect.insecure_request?(valid_data.except('timestamp')).should be_false
+    end
+  end
+
   describe ".get_request_errors" do
     let(:timestamp) { Time.now.utc.to_i }
     let(:signature) { Digest::MD5.hexdigest(timestamp.to_s + secret) }
@@ -109,10 +167,9 @@ describe JsConnect do
     end
 
     it "returns InvalidRequest if the timestamp is more than +/-30 minutes" do
-      old_timestamp = 1.day.ago
-      data = valid_data.merge('timestamp' => old_timestamp, 'signature' => Digest::MD5.hexdigest(old_timestamp.to_s + secret))
+      JsConnect.stub(:valid_timestamp?).with(anything){false}
 
-      JsConnect.get_request_errors(data).should be_instance_of(JsConnect::Errors::TimestampInvalid)
+      JsConnect.get_request_errors(valid_data).should be_instance_of(JsConnect::Errors::TimestampInvalid)
     end
 
     it "returns an InvalidRequest if the signature is missing but the timestamp is still there" do
@@ -125,7 +182,8 @@ describe JsConnect do
     end
 
     it "returns an AccessDenied if the signature is wrong" do
-      JsConnect.get_request_errors(valid_data.merge('signature' => '4532563')).should be_instance_of(JsConnect::Errors::AccessDenied)
+      JsConnect.stub(:valid_request_signature?).with(anything){false}
+      JsConnect.get_request_errors(valid_data).should be_instance_of(JsConnect::Errors::AccessDenied)
     end
 
     it "returns nil when timestamp and signature are correct" do

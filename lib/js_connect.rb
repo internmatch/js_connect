@@ -4,13 +4,12 @@ require "js_connect/errors"
 
 module JsConnect
   def self.get_request_errors(data)
-    raise ArgumentError.new unless self.config.configured?
+    self.config.assert_configured!
     return Errors::ClientIdMissing.new unless data.has_key?('clientid')
     return Errors::InvalidClient.new(data['clientid']) unless data['clientid'] == self.config.client_id
-    return Errors::TimestampInvalid.new if !data.has_key?('timestamp') && data.has_key?('signature')
     return Errors::SignatureMissing.new if !data.has_key?('signature') && data.has_key?('timestamp')
-    return Errors::TimestampInvalid.new if data.has_key?('timestamp') && data.has_key?('signature') && (Time.now.utc.to_i - data['timestamp'].to_i).abs > 1800
-    return Errors::AccessDenied.new if data.has_key?('timestamp') && data.has_key?('signature') && data['signature'] != Digest::MD5.hexdigest("#{data['timestamp']}#{self.config.secret}")
+    return Errors::TimestampInvalid.new unless self.valid_timestamp?(data)
+    return Errors::AccessDenied.new unless self.valid_request_signature?(data)
   end
 
   def self.get_response(user, data)
@@ -31,16 +30,30 @@ module JsConnect
     data.has_key?('timestamp') && data.has_key?('signature')
   end
 
+  def self.insecure_request?(data)
+    !data.has_key?('timestamp') && !data.has_key?('signature')
+  end
+
   def self.sign_data(data)
-    raise ArgumentError.new unless self.config.configured?
+    self.config.assert_configured!
     data.merge(
       'clientid' => self.config.client_id,
       'signature' => self.generate_signature(data)
     )
   end
 
+  def self.valid_request_signature?(data)
+    self.config.assert_configured!
+    self.insecure_request?(data) || data['signature'] == Digest::MD5.hexdigest("#{data['timestamp']}#{self.config.secret}")
+  end
+
+  def self.valid_timestamp?(data)
+    self.config.assert_configured!
+    self.insecure_request?(data) || (Time.now.utc.to_i - data['timestamp'].to_i).abs <= 1800
+  end
+
   def self.generate_signature(data)
-    raise ArgumentError.new unless self.config.configured?
+    self.config.assert_configured!
     Digest::MD5.hexdigest("#{self.hash_to_sorted_params(data)}#{self.config.secret}") # MD5?!? Really!?!?!
   end
 
