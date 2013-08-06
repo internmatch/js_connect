@@ -100,7 +100,7 @@ describe JsConnect do
     end
 
     it "adds the client_id to the data" do
-      JsConnect.sign_data(data)['clientid'].should == client_id
+      JsConnect.sign_data(data)['client_id'].should == client_id
     end
 
     it "adds the generated signature to the data" do
@@ -149,7 +149,7 @@ describe JsConnect do
     let(:valid_data) {
       {
         'name' => "Ryan", 'photourl' => 'http://www.google.com',
-        'clientid' => client_id, 'timestamp' => timestamp,
+        'client_id' => client_id, 'timestamp' => timestamp,
         'signature' => signature
       }
     }
@@ -158,8 +158,8 @@ describe JsConnect do
       let(:method_and_args) { [:get_request_errors, valid_data] }
     end
 
-    it "returns an InvalidRequest if the clientid is missing" do
-      JsConnect.get_request_errors(valid_data.except('clientid')).should be_instance_of(JsConnect::Errors::ClientIdMissing)
+    it "returns an InvalidRequest if the client_id is missing" do
+      JsConnect.get_request_errors(valid_data.except('client_id')).should be_instance_of(JsConnect::Errors::ClientIdMissing)
     end
 
     it "returns an InvalidRequest if the timestamp is missing but the signature is still there" do
@@ -177,7 +177,7 @@ describe JsConnect do
     end
 
     it "returns an InvalidClient if the clientid doesn't match the configured client_id" do
-      data = valid_data.merge("clientid" => '4321')
+      data = valid_data.merge("client_id" => '4321')
       JsConnect.get_request_errors(data).should be_instance_of(JsConnect::Errors::InvalidClient)
     end
 

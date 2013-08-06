@@ -8,7 +8,7 @@ describe JsConnect::SessionsController do
   let(:signature) { Digest::MD5.hexdigest(timestamp.to_s + secret) }
   let(:valid_params) {
     {
-      :callback => 'callback', :clientid => client_id,
+      :callback => 'callback', :client_id => client_id,
       :timestamp => timestamp, :signature => signature
     }
   }
@@ -81,7 +81,7 @@ describe JsConnect::SessionsController do
         session['uniqueid'].should == user.id
         session['email'].should == user.email
         session['roles'].should == user.roles.join(',')
-        session['clientid'].should == client_id
+        session['client_id'].should == client_id
         session['signature'].should == response_signature
       end
     end

@@ -5,8 +5,8 @@ require "js_connect/errors"
 module JsConnect
   def self.get_request_errors(data)
     self.config.assert_configured!
-    return Errors::ClientIdMissing.new unless data.has_key?('clientid')
-    return Errors::InvalidClient.new(data['clientid']) unless data['clientid'] == self.config.client_id
+    return Errors::ClientIdMissing.new unless data.has_key?('client_id')
+    return Errors::InvalidClient.new(data['client_id']) unless data['client_id'] == self.config.client_id
     return Errors::SignatureMissing.new if !data.has_key?('signature') && data.has_key?('timestamp')
     return Errors::TimestampInvalid.new unless self.valid_timestamp?(data)
     return Errors::AccessDenied.new unless self.valid_request_signature?(data)
@@ -37,7 +37,7 @@ module JsConnect
   def self.sign_data(data)
     self.config.assert_configured!
     data.merge(
-      'clientid' => self.config.client_id,
+      'client_id' => self.config.client_id,
       'signature' => self.generate_signature(data)
     )
   end
