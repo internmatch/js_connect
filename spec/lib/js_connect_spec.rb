@@ -4,20 +4,22 @@ describe JsConnect do
   let(:client_id) { '12345' }
   let(:secret) { 'cf93f9688844e9249ce2cfde1c645a78' }
   before do
-    JsConnect.client_id = client_id
-    JsConnect.secret = secret
+    JsConnect.config do |c|
+      c.client_id = client_id
+      c.secret = secret
+    end
   end
 
   shared_examples_for "it requires authentication information" do
     it "raises an argument error if there is no client_id configured" do
-      JsConnect.client_id = nil
+      JsConnect.config.client_id = nil
       expect {
         JsConnect.send(*method_and_args)
       }.to raise_exception(ArgumentError)
     end
 
     it "raises an argument error if there is no secret configured" do
-      JsConnect.secret = nil
+      JsConnect.config.secret = nil
       expect {
         JsConnect.send(*method_and_args)
       }.to raise_exception(ArgumentError)
@@ -70,7 +72,7 @@ describe JsConnect do
   end
 
   describe ".secure_request?" do
-    let(:timestamp) { Time.now }
+    let(:timestamp) { Time.now.utc.to_i }
     let(:signature) { Digest::MD5.hexdigest(timestamp.to_s + secret) }
     let(:valid_data) { {'timestamp' => timestamp, 'signature' => signature} }
 
@@ -84,7 +86,7 @@ describe JsConnect do
   end
 
   describe ".get_request_errors" do
-    let(:timestamp) { Time.now.utc }
+    let(:timestamp) { Time.now.utc.to_i }
     let(:signature) { Digest::MD5.hexdigest(timestamp.to_s + secret) }
     let(:valid_data) {
       {
