@@ -7,11 +7,11 @@ require "js_connect/version"
 Gem::Specification.new do |s|
   s.name        = "js_connect"
   s.version     = JsConnect::VERSION
-  s.authors     = ["TODO: Your name"]
-  s.email       = ["TODO: Your email"]
-  s.homepage    = "TODO"
-  s.summary     = "TODO: Summary of JsConnect."
-  s.description = "TODO: Description of JsConnect."
+  s.authors     = ["Ryan Garver"]
+  s.email       = ["ryan@internmatch.com"]
+  s.homepage    = "https://github.com/internmatch/js_connect"
+  s.summary     = "Implements the JSConnect JSONP API for VanillaForums"
+  s.description = "Implements the JSConnect JSONP API for VanillaForums"
 
   s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.rdoc"]
   s.test_files = Dir["spec/**/*"]
