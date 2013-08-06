@@ -19,8 +19,8 @@ module JsConnect
       self.sign_data(response.merge(
         'uniqueid' => user.id,
         'email' => user.email,
-        'roles' => user.roles.join(',')
-      ))
+        'roles' => Array(user.roles).join(',')
+      ).compact)
     else
       response
     end
@@ -54,11 +54,13 @@ module JsConnect
 
   def self.generate_signature(data)
     self.config.assert_configured!
+    Rails.logger.debug self.hash_to_sorted_params(data)
     Digest::MD5.hexdigest("#{self.hash_to_sorted_params(data)}#{self.config.secret}") # MD5?!? Really!?!?!
   end
 
   def self.hash_to_sorted_params(data)
-    data.sort_by(&:first).map do |value|
+    data.sort_by{|value| value.first.to_s.downcase}.
+      map do |value|
       "#{CGI.escape(value.first.to_s)}=#{CGI.escape(value.last.to_s||'')}"
     end.join("&")
   end
