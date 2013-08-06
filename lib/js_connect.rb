@@ -59,7 +59,7 @@ module JsConnect
 
   def self.hash_to_sorted_params(data)
     data.sort_by(&:first).map do |value|
-      "#{CGI.escape(value.first.to_s)}=#{CGI.escape(value.last)}"
+      "#{CGI.escape(value.first.to_s)}=#{CGI.escape(value.last.to_s||'')}"
     end.join("&")
   end
 
