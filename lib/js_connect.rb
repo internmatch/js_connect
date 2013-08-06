@@ -9,12 +9,22 @@ module JsConnect
     return Errors::InvalidClient.new(data['clientid']) unless data['clientid'] == self.config.client_id
     return Errors::TimestampInvalid.new if !data.has_key?('timestamp') && data.has_key?('signature')
     return Errors::SignatureMissing.new if !data.has_key?('signature') && data.has_key?('timestamp')
-    return Errors::TimestampInvalid.new unless (Time.now.utc.to_i - data['timestamp'].to_i).abs <= 1800
-    return Errors::AccessDenied.new unless data['signature'] == Digest::MD5.hexdigest("#{data['timestamp']}#{self.config.secret}")
+    return Errors::TimestampInvalid.new if data.has_key?('timestamp') && data.has_key?('signature') && (Time.now.utc.to_i - data['timestamp'].to_i).abs > 1800
+    return Errors::AccessDenied.new if data.has_key?('timestamp') && data.has_key?('signature') && data['signature'] != Digest::MD5.hexdigest("#{data['timestamp']}#{self.config.secret}")
   end
 
   def self.get_response(user, data)
     return {'name' => '', 'photourl' => self.config.blank_image_url} if user.nil?
+    response = {'name' => user.name, 'photourl' => user.photo_url}
+    if self.secure_request?(data)
+      self.sign_data(response.merge(
+        'uniqueid' => user.id,
+        'email' => user.email,
+        'roles' => user.roles.join(',')
+      ))
+    else
+      response
+    end
   end
 
   def self.secure_request?(data)

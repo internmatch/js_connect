@@ -46,4 +46,45 @@ describe JsConnect::SessionsController do
       session['photourl'].should == JsConnect.config.blank_image_url
     end
   end
+
+  context 'the user is signed in' do
+    let(:user) { Struct.new(:id, :name, :photo_url, :email, :roles).
+                 new(123, 'Test User', 'http://www.google.com', 'test.user@gmail.com', ['member']) }
+    before do
+      JsConnect.config.current_user = proc { user }
+    end
+
+    context 'and the request hasn\'t been signed' do
+      let(:params) { valid_params.except(:timestamp, :signature) }
+
+      it 'responds with limited data' do
+        get :show, params
+        response.should be_success
+        session = assigns(:session)
+        session['name'].should == user.name
+        session['photourl'].should == user.photo_url
+      end
+    end
+
+    context 'and the request has been signed' do
+      let(:response_signature) { 'jklasdfjklsdafkjhlasdfkjh' }
+      before do
+        JsConnect.stub(:generate_signature).with(anything){response_signature}
+      end
+
+      it 'responds with all the data' do
+        get :show, valid_params
+        response.should be_success
+        session = assigns(:session)
+        puts session.inspect
+        session['name'].should == user.name
+        session['photourl'].should == user.photo_url
+        session['uniqueid'].should == user.id
+        session['email'].should == user.email
+        session['roles'].should == user.roles.join(',')
+        session['clientid'].should == client_id
+        session['signature'].should == response_signature
+      end
+    end
+  end
 end

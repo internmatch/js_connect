@@ -127,5 +127,13 @@ describe JsConnect do
     it "returns an AccessDenied if the signature is wrong" do
       JsConnect.get_request_errors(valid_data.merge('signature' => '4532563')).should be_instance_of(JsConnect::Errors::AccessDenied)
     end
+
+    it "returns nil when timestamp and signature are correct" do
+      JsConnect.get_request_errors(valid_data).should be_nil
+    end
+
+    it "returns nil when timestamp and signature are completely gone" do
+      JsConnect.get_request_errors(valid_data.except('timestamp', 'signature')).should be_nil
+    end
   end
 end
