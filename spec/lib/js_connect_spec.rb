@@ -123,6 +123,21 @@ describe JsConnect do
     it "returns false for an unsigned data" do
       JsConnect.secure_request?(valid_data.except('timestamp', 'signature')).should be_false
     end
+
+    context 'with a different digest provided' do
+      let(:signature) { Digest::SHA256.hexdigest(timestamp.to_s + secret) }
+      before do
+        JsConnect.config.digest = Digest::SHA256
+      end
+
+      it "returns true for a valid data" do
+        JsConnect.secure_request?(valid_data).should be_true
+      end
+
+      it "returns false for an unsigned data" do
+        JsConnect.secure_request?(valid_data.except('timestamp', 'signature')).should be_false
+      end
+    end
   end
 
   describe ".insecure_request?" do

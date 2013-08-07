@@ -44,7 +44,7 @@ module JsConnect
 
   def self.valid_request_signature?(data)
     self.config.assert_configured!
-    self.insecure_request?(data) || data['signature'] == Digest::MD5.hexdigest("#{data['timestamp']}#{self.config.secret}")
+    self.insecure_request?(data) || data['signature'] == self.config.hexdigest("#{data['timestamp']}#{self.config.secret}")
   end
 
   def self.valid_timestamp?(data)
@@ -55,7 +55,7 @@ module JsConnect
   def self.generate_signature(data)
     self.config.assert_configured!
     Rails.logger.debug self.hash_to_sorted_params(data)
-    Digest::MD5.hexdigest("#{self.hash_to_sorted_params(data)}#{self.config.secret}") # MD5?!? Really!?!?!
+    self.config.hexdigest("#{self.hash_to_sorted_params(data)}#{self.config.secret}")
   end
 
   def self.hash_to_sorted_params(data)

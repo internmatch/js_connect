@@ -1,10 +1,11 @@
 module JsConnect
   class Configuration
-    attr_accessor :client_id, :secret, :current_user, :blank_image_url
+    attr_accessor :client_id, :secret, :current_user, :blank_image_url, :digest
 
     def initialize
       @current_user = :current_user
       @blank_image_url = ''
+      @digest = Digest::MD5
     end
 
     def evaluate_current_user(context)
@@ -13,6 +14,10 @@ module JsConnect
       else
         context.send(self.current_user)
       end
+    end
+
+    def hexdigest(str)
+      @digest.hexdigest(str)
     end
 
     def configured?
