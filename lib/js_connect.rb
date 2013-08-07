@@ -20,7 +20,7 @@ module JsConnect
         'uniqueid' => user.id,
         'email' => user.email,
         'roles' => Array(user.roles).join(',')
-      ).compact)
+      ).delete_if{|k, v| v.blank?})
     else
       response
     end
