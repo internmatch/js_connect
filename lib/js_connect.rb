@@ -54,7 +54,6 @@ module JsConnect
 
   def self.generate_signature(data)
     self.config.assert_configured!
-    Rails.logger.debug self.hash_to_sorted_params(data)
     self.config.hexdigest("#{self.hash_to_sorted_params(data)}#{self.config.secret}")
   end
 

@@ -126,8 +126,11 @@ describe JsConnect do
 
     context 'with a different digest provided' do
       let(:signature) { Digest::SHA256.hexdigest(timestamp.to_s + secret) }
-      before do
+      around do |example|
+        digest = JsConnect.config.digest
         JsConnect.config.digest = Digest::SHA256
+        example.run
+        JsConnect.config.digest = digest
       end
 
       it "returns true for a valid data" do
